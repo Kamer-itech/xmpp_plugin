@@ -77,8 +77,8 @@ class _MyAppState extends State<MyApp>
     final auth = {
       "user_jid":
           "${_userNameController.text}@${_hostController.text}/${Platform.isAndroid ? "Android" : "iOS"}",
-      "password": "${_passwordController.text}",
-      "host": "${_hostController.text}",
+      "password": "11111111",
+      "host": "192.168.56.1",
       "port": '5222',
       "nativeLogFilePath": NativeLogHelper.logFilePath,
       "requireSSLConnection": false,
@@ -769,7 +769,7 @@ class _MyAppState extends State<MyApp>
                     ElevatedButton(
                       onPressed: () async {
                         await flutterXmpp
-                            .createRoster(_createRostersController.text);
+                            .createRoster(_createRostersController.text , _userNameController.text);
                       },
                       child: Text("Create MyRosters"),
                       style: ElevatedButton.styleFrom(

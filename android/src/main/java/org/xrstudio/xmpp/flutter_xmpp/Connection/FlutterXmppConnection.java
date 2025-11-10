@@ -54,7 +54,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.net.ssl.SSLContext;
@@ -292,12 +294,16 @@ public class FlutterXmppConnection implements ConnectionListener {
     }
 
 
-    public static List<String> getMyRosters() {
-        List<String> muRosterList = new ArrayList<>();
+    public static List<Map<String, String>> getMyRosters() {
+        List<Map<String, String>> muRosterList = new ArrayList<>();
         try {
             Set<RosterEntry> allRoster = rosterConnection.getEntries();
             for (RosterEntry rosterEntry : allRoster) {
-                muRosterList.add(rosterEntry.toString());
+                Map<String, String> rosterMap = new HashMap<>();
+                String jid = rosterEntry.getJid().asBareJid().toString();
+                rosterMap.put("jid", jid);
+                rosterMap.put("name", rosterEntry.getName() != null ? rosterEntry.getName() : "");
+                muRosterList.add(rosterMap);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -305,11 +311,43 @@ public class FlutterXmppConnection implements ConnectionListener {
         return muRosterList;
     }
 
-    public static void createRosterEntry(String userJid) {
+    public static void createRosterEntry(String userJid, String name) {
         try {
 //            rosterConnection.createEntry(JidCreate.bareFrom(Utils.getJidWithDomainName(userJid, mHost)), userJid, null);
-            rosterConnection.createItemAndRequestSubscription(JidCreate.bareFrom(Utils.getJidWithDomainName(userJid, mHost)), userJid, null);
+            rosterConnection.createItemAndRequestSubscription(JidCreate.bareFrom(Utils.getJidWithDomainName(userJid, mHost)), name, null);
 
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void createRosterEntries(List<Map<String, String>> rosterList) {
+        if (rosterList == null || rosterList.isEmpty()) {
+            return;
+        }
+        
+        for (Map<String, String> roster : rosterList) {
+            try {
+                String userJid = roster.get(Constants.USER_JID);
+                String name = roster.get(Constants.NAME);
+                
+                if (userJid != null && !userJid.isEmpty()) {
+                    String rosterName = name != null ? name : "";
+                    createRosterEntry(userJid, rosterName);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void removeRosterEntry(String userJid) {
+        try {
+            EntityBareJid jid = JidCreate.entityBareFrom(Utils.getJidWithDomainName(userJid, mHost));
+            RosterEntry rosterEntry = rosterConnection.getEntry(jid);
+            if (rosterEntry != null) {
+                rosterConnection.removeEntry(rosterEntry);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

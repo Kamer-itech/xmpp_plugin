@@ -28,6 +28,8 @@ public class Constants {
     public static final String STATE_DISCONNECTING = "DISCONNECTING";
     public static final String GET_LAST_SEEN = "get_last_seen";
     public static final String CREATE_ROSTER = "create_roster";
+    public static final String CREATE_ROSTERS = "create_rosters";
+    public static final String REMOVE_ROSTER = "remove_roster";
     public static final String GET_MY_ROSTERS = "get_my_rosters";
     public static final String CUSTOM_MESSAGE = "send_custom_message";
     public static final String ADD_ADMINS_IN_GROUP = "add_admins_in_group";
@@ -119,7 +121,9 @@ public class Constants {
     public static final String PORT = "port";
     public static final String JID_USER = "jid_user";
     public static final String USER_JID = "user_jid";
+    public static final String NAME = "name";
     public static final String PASSWORD = "password";
+    public static final String ROSTERS = "rosters";
     public static final String SEND_MESSAGE = "send_message";
     public static final String SEND_GROUP_MESSAGE = "send_group_message";
     public static final String LOGIN = "login";

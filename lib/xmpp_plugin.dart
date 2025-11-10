@@ -293,10 +293,26 @@ class XmppConnection {
     return lastSeenTime;
   }
 
-  Future<void> createRoster(String userJid) async {
-    final params = {"user_jid": userJid};
+  Future<void> createRoster(String userJid, String name) async {
+    final params = {"user_jid": userJid, "name": name};
     await _channel.invokeMethod('create_roster', params);
     print('checkNewFeat create roster success');
+  }
+
+  Future<void> createRosters(List<Map<String, String>> rosters) async {
+    if (rosters.isNotEmpty) {
+      final params = {"rosters": rosters};
+      printLogForMethodCall('create_rosters', params);
+      await _channel.invokeMethod('create_rosters', params);
+      print('checkNewFeat create rosters success');
+    }
+  }
+
+  Future<void> deleteRoster(String userJid) async {
+    final params = {"user_jid": userJid};
+    printLogForMethodCall('delete_roster', params);
+    await _channel.invokeMethod('delete_roster', params);
+    print('checkNewFeat delete roster success');
   }
 
   Future<dynamic> getMyRosters() async {

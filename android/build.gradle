@@ -2,6 +2,9 @@ group 'org.xrstudio.xmpp'
 version '1.0'
 
 buildscript {
+    ext {
+        agp_version = '8.3.1'
+    }
     repositories {
         google()
         mavenCentral()
@@ -9,7 +12,7 @@ buildscript {
 
     dependencies {
         // classpath 'com.android.tools.build:gradle:3.6.4'
-        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath "com.android.tools.build:gradle:$agp_version"
     }
 }
 
@@ -24,9 +27,11 @@ apply plugin: 'com.android.library'
 
 android {
 
+    namespace "org.xrstudio.xmpp"
+
     defaultConfig {
         compileSdk 33
-        minSdkVersion 16
+        minSdkVersion 26 //16
         multiDexEnabled true
     }
 }
@@ -39,7 +44,8 @@ configurations {
 
 ext {
     // smackVersion = '4.3.4'
-    smackVersion = '4.4.6'
+    //smackVersion = '4.4.6'
+    smackVersion = '4.4.8'
 }
 
 
@@ -55,4 +61,5 @@ dependencies {
     implementation 'com.amazonaws:aws-android-sdk-s3:2.73.0'
     implementation 'com.amazonaws:aws-android-sdk-ddb:2.73.0'
     implementation 'com.android.support:multidex:1.0.3'
+    //implementation fileTree(dir: 'E:\\Apk\\version de flutter\\flutter_windows_3.7.8-stable_dart_2.19.5\\flutter\\bin\\cache\\artifacts\\engine\\android-x64', include: ['*.aar', '*.jar'], exclude: [])
 }

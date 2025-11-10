@@ -39,6 +39,7 @@ public class FlutterXmppPlugin implements MethodCallHandler, FlutterPlugin, Acti
     private String body;
     private String to_jid;
     private String userJid;
+    private String name;
     private String groupName;
     private String host = "";
     private String customString;
@@ -753,14 +754,38 @@ public class FlutterXmppPlugin implements MethodCallHandler, FlutterPlugin, Acti
 
             case Constants.GET_MY_ROSTERS:
 
-                List<String> getMyRosters = FlutterXmppConnection.getMyRosters();
+                List<Map<String, String>> getMyRosters = FlutterXmppConnection.getMyRosters();
                 result.success(getMyRosters);
                 break;
 
             case Constants.CREATE_ROSTER:
 
                 userJid = call.argument(Constants.USER_JID);
-                FlutterXmppConnection.createRosterEntry(userJid);
+                name = call.argument(Constants.NAME);
+                FlutterXmppConnection.createRosterEntry(userJid, name);
+                result.success(Constants.SUCCESS);
+                break;
+
+            case Constants.CREATE_ROSTERS:
+
+                @SuppressWarnings("unchecked")
+                List<Map<String, String>> rosterList = (List<Map<String, String>>) call.argument(Constants.ROSTERS);
+                if (rosterList == null) {
+                    result.error("MISSING", "Missing argument rosters.", null);
+                    break;
+                }
+                FlutterXmppConnection.createRosterEntries(rosterList);
+                result.success(Constants.SUCCESS);
+                break;
+
+            case Constants.REMOVE_ROSTER:
+
+                userJid = call.argument(Constants.USER_JID);
+                if (userJid == null || userJid.isEmpty()) {
+                    result.error("MISSING", "Missing argument user_jid.", null);
+                    break;
+                }
+                FlutterXmppConnection.removeRosterEntry(userJid);
                 result.success(Constants.SUCCESS);
                 break;
 
