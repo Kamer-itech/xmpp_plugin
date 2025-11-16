@@ -300,9 +300,21 @@ public class FlutterXmppConnection implements ConnectionListener {
             Set<RosterEntry> allRoster = rosterConnection.getEntries();
             for (RosterEntry rosterEntry : allRoster) {
                 Map<String, String> rosterMap = new HashMap<>();
-                String jid = rosterEntry.getJid().asBareJid().toString();
+                EntityBareJid bareJid = rosterEntry.getJid().asBareJid();
+                String jid = bareJid.toString();
                 rosterMap.put("jid", jid);
                 rosterMap.put("name", rosterEntry.getName() != null ? rosterEntry.getName() : "");
+                
+                Presence presence = rosterConnection.getPresence(bareJid);
+                if (presence != null) {
+                    rosterMap.put("presenceType", presence.getType().toString().toLowerCase());
+                    Presence.Mode mode = presence.getMode();
+                    rosterMap.put("presenceMode", mode != null ? mode.toString().toLowerCase() : null);
+                } else {
+                    rosterMap.put("presenceType", null);
+                    rosterMap.put("presenceMode", null);
+                }
+                
                 muRosterList.add(rosterMap);
             }
         } catch (Exception e) {
@@ -350,6 +362,32 @@ public class FlutterXmppConnection implements ConnectionListener {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public static Map<String, String> getPresenceStatus(String userJid) {
+        try {
+            EntityBareJid jid = JidCreate.entityBareFrom(Utils.getJidWithDomainName(userJid, mHost));
+            
+            RosterEntry rosterEntry = rosterConnection.getEntry(jid);
+            if (rosterEntry == null) {
+                return null; 
+            }
+            
+            Presence presence = rosterConnection.getPresence(jid);
+            if (presence == null) {
+                return null; 
+            }
+            
+            Map<String, String> presenceStatus = new HashMap<>();
+            presenceStatus.put("presenceType", presence.getType().toString().toLowerCase());
+            Presence.Mode mode = presence.getMode();
+            presenceStatus.put("presenceMode", mode != null ? mode.toString().toLowerCase() : null);
+            
+            return presenceStatus;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null; 
         }
     }
 

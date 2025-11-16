@@ -789,6 +789,21 @@ public class FlutterXmppPlugin implements MethodCallHandler, FlutterPlugin, Acti
                 result.success(Constants.SUCCESS);
                 break;
 
+            case Constants.GET_PRESENCE_STATUS:
+
+                userJid = call.argument(Constants.USER_JID);
+                if (userJid == null || userJid.isEmpty()) {
+                    result.error("MISSING", "Missing argument user_jid.", null);
+                    break;
+                }
+                Map<String, String> presenceStatus = FlutterXmppConnection.getPresenceStatus(userJid);
+                if (presenceStatus == null) {
+                    result.error("NOT_FOUND", "User not found in roster or presence not available.", null);
+                    break;
+                }
+                result.success(presenceStatus);
+                break;
+
             default:
                 result.notImplemented();
                 break;

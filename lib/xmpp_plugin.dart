@@ -310,8 +310,8 @@ class XmppConnection {
 
   Future<void> deleteRoster(String userJid) async {
     final params = {"user_jid": userJid};
-    printLogForMethodCall('delete_roster', params);
-    await _channel.invokeMethod('delete_roster', params);
+    printLogForMethodCall('remove_roster', params);
+    await _channel.invokeMethod('remove_roster', params);
     print('checkNewFeat delete roster success');
   }
 
@@ -319,6 +319,17 @@ class XmppConnection {
     List<dynamic> myRosters = await _channel.invokeMethod('get_my_rosters');
     print('checkNewFeat getRosters myRosters: $myRosters');
     return myRosters;
+  }
+
+  Future<Map<String, String>?> getPresenceStatus(String userJid) async {
+    final params = {"user_jid": userJid};
+    printLogForMethodCall('get_presence_status', params);
+    final dynamic presenceStatus = await _channel.invokeMethod('get_presence_status', params);
+    if (presenceStatus != null && presenceStatus is Map) {
+      return Map<String, String>.from(presenceStatus);
+    }
+    print('checkNewFeat getPresenceStatus: User not found in roster or presence not available');
+    return null;
   }
 
   Future<List<dynamic>> getMembers(String groupName) async {
