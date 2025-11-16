@@ -284,10 +284,26 @@ public class FlutterXmppConnection implements ConnectionListener {
     public static long getLastSeen(String userJid) {
         long userLastActivity = Constants.RESULT_DEFAULT;
         try {
+            if (userJid == null || userJid.isEmpty()) {
+                Utils.printLog("getLastSeen: userJid is null or empty");
+                return userLastActivity;
+            }
+            
+            // Si le JID contient déjà un @, l'utiliser tel quel (il a déjà un domaine)
+            String finalJid;
+            if (userJid.contains(Constants.SYMBOL_COMPARE_JID)) {
+                finalJid = userJid;
+            } else {
+                // Sinon, ajouter le domaine
+                finalJid = Utils.getJidWithDomainName(userJid, mHost);
+            }
+            
+            Utils.printLog("getLastSeen: Using JID: " + finalJid);
             LastActivityManager lastActivityManager = LastActivityManager.getInstanceFor(mConnection);
-            LastActivity lastActivity = lastActivityManager.getLastActivity(JidCreate.from(Utils.getJidWithDomainName(userJid, mHost)));
+            LastActivity lastActivity = lastActivityManager.getLastActivity(JidCreate.from(finalJid));
             userLastActivity = lastActivity.lastActivity;
         } catch (Exception e) {
+            Utils.printLog("getLastSeen: Error for JID " + userJid + ": " + e.getMessage());
             e.printStackTrace();
         }
         return userLastActivity;
