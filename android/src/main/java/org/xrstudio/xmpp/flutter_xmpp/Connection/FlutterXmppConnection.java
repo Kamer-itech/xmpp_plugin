@@ -294,23 +294,34 @@ public class FlutterXmppConnection implements ConnectionListener {
     }
 
 
-    public static List<Map<String, String>> getMyRosters() {
-        List<Map<String, String>> muRosterList = new ArrayList<>();
+    public static List<Map<String, Object>> getMyRosters() {
+        List<Map<String, Object>> muRosterList = new ArrayList<>();
         try {
+            if (rosterConnection == null) {
+                Utils.printLog("getMyRosters: rosterConnection is null");
+                return muRosterList;
+            }
+            
             Set<RosterEntry> allRoster = rosterConnection.getEntries();
             for (RosterEntry rosterEntry : allRoster) {
-                Map<String, String> rosterMap = new HashMap<>();
-                EntityBareJid bareJid = rosterEntry.getJid().asBareJid();
+                Map<String, Object> rosterMap = new HashMap<>();
+                EntityBareJid bareJid = (EntityBareJid) rosterEntry.getJid().asBareJid();
                 String jid = bareJid.toString();
                 rosterMap.put("jid", jid);
                 rosterMap.put("name", rosterEntry.getName() != null ? rosterEntry.getName() : "");
                 
-                Presence presence = rosterConnection.getPresence(bareJid);
-                if (presence != null) {
-                    rosterMap.put("presenceType", presence.getType().toString().toLowerCase());
-                    Presence.Mode mode = presence.getMode();
-                    rosterMap.put("presenceMode", mode != null ? mode.toString().toLowerCase() : null);
-                } else {
+                try {
+                    Presence presence = rosterConnection.getPresence(bareJid);
+                    if (presence != null) {
+                        rosterMap.put("presenceType", presence.getType().toString().toLowerCase());
+                        Presence.Mode mode = presence.getMode();
+                        rosterMap.put("presenceMode", mode != null ? mode.toString().toLowerCase() : null);
+                    } else {
+                        rosterMap.put("presenceType", null);
+                        rosterMap.put("presenceMode", null);
+                    }
+                } catch (Exception e) {
+                    Utils.printLog("getMyRosters: Error getting presence for " + jid + ": " + e.getMessage());
                     rosterMap.put("presenceType", null);
                     rosterMap.put("presenceMode", null);
                 }
@@ -318,6 +329,7 @@ public class FlutterXmppConnection implements ConnectionListener {
                 muRosterList.add(rosterMap);
             }
         } catch (Exception e) {
+            Utils.printLog("getMyRosters: Error: " + e.getMessage());
             e.printStackTrace();
         }
         return muRosterList;

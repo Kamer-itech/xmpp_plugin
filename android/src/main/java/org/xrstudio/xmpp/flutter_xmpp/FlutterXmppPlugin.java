@@ -754,7 +754,7 @@ public class FlutterXmppPlugin implements MethodCallHandler, FlutterPlugin, Acti
 
             case Constants.GET_MY_ROSTERS:
 
-                List<Map<String, String>> getMyRosters = FlutterXmppConnection.getMyRosters();
+                List<Map<String, Object>> getMyRosters = FlutterXmppConnection.getMyRosters();
                 result.success(getMyRosters);
                 break;
 
