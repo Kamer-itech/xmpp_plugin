@@ -332,6 +332,27 @@ class XmppConnection {
     return null;
   }
 
+  Future<void> sendSubscriptionRequest(String userJid) async {
+    final params = {"user_jid": userJid};
+    printLogForMethodCall('send_subscription_request', params);
+    await _channel.invokeMethod('send_subscription_request', params);
+    print('checkNewFeat send subscription request success');
+  }
+
+  Future<void> acceptSubscriptionRequest(String userJid) async {
+    final params = {"user_jid": userJid};
+    printLogForMethodCall('accept_subscription_request', params);
+    await _channel.invokeMethod('accept_subscription_request', params);
+    print('checkNewFeat accept subscription request success');
+  }
+
+  Future<void> rejectSubscriptionRequest(String userJid) async {
+    final params = {"user_jid": userJid};
+    printLogForMethodCall('reject_subscription_request', params);
+    await _channel.invokeMethod('reject_subscription_request', params);
+    print('checkNewFeat reject subscription request success');
+  }
+
   Future<List<dynamic>> getMembers(String groupName) async {
     final params = {"group_name": groupName};
     print('group_name: $groupName');

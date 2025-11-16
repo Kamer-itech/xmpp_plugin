@@ -250,7 +250,14 @@ class _MyAppState extends State<MyApp>
   TextEditingController _msgIdController = TextEditingController();
   TextEditingController _userJidController = TextEditingController();
   TextEditingController _createRostersController = TextEditingController();
+  TextEditingController _deleteRosterController = TextEditingController();
+  TextEditingController _presenceStatusController = TextEditingController();
+  TextEditingController _createRostersListController = TextEditingController();
+  TextEditingController _createRostersNameController = TextEditingController();
   TextEditingController _receiptIdController = TextEditingController();
+  TextEditingController _sendSubscriptionController = TextEditingController();
+  TextEditingController _acceptSubscriptionController = TextEditingController();
+  TextEditingController _rejectSubscriptionController = TextEditingController();
   TextEditingController _joinMUCTextController = TextEditingController();
   TextEditingController _joinTimeController = TextEditingController();
   TextEditingController _messageController = TextEditingController();
@@ -287,8 +294,8 @@ class _MyAppState extends State<MyApp>
                 if (await NativeLogHelper().isFileExist()) {
                   Share.shareXFiles([XFile(NativeLogHelper.logFilePath)]);
                 } else {
-                  if (_scaffoldKey.currentState != null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                  if (_scaffoldKey.currentContext != null) {
+                    ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
                         SnackBar(content: Text("File not found!")));
                   }
                 }
@@ -300,8 +307,8 @@ class _MyAppState extends State<MyApp>
                 if (await NativeLogHelper().isFileExist()) {
                   NativeLogHelper().deleteLogFile();
                 } else {
-                  if (_scaffoldKey.currentState != null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                  if (_scaffoldKey.currentContext != null) {
+                    ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
                         SnackBar(content: Text("File not found!")));
                   }
                 }
@@ -747,7 +754,16 @@ class _MyAppState extends State<MyApp>
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    await flutterXmpp.getMyRosters();
+                    var rosters = await flutterXmpp.getMyRosters();
+                    print('MyRosters: $rosters');
+                    if (_scaffoldKey.currentContext != null) {
+                      ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
+                        SnackBar(
+                          content: Text('Rosters retrieved. Check logs for details.'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
                   },
                   child: Text(" Get MyRosters "),
                   style:
@@ -756,34 +772,270 @@ class _MyAppState extends State<MyApp>
                 SizedBox(
                   height: 15,
                 ),
+                Text(
+                  "Create Single Roster:",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 5),
                 customTextField(
-                  hintText: "Create MyRosters",
+                  hintText: "User JID (for single roster)",
                   textEditController: _createRostersController,
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (_createRostersController.text.isNotEmpty) {
+                      await flutterXmpp.createRoster(
+                          _createRostersController.text, 
+                          _userNameController.text);
+                      if (_scaffoldKey.currentContext != null) {
+                        ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
+                          SnackBar(
+                            content: Text('Single roster created: ${_createRostersController.text}'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  child: Text("Create Single Roster"),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black),
                 ),
                 SizedBox(
                   height: 15,
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () async {
-                        await flutterXmpp
-                            .createRoster(_createRostersController.text , _userNameController.text);
-                      },
-                      child: Text("Create MyRosters"),
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black),
-                    ),
-                    ElevatedButton(
-                      onPressed: () async {
-                        await flutterXmpp.currentState();
-                      },
-                      child: Text("Current State"),
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black),
-                    ),
-                  ],
+                Text(
+                  "Create Multiple Rosters:",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 5),
+                customTextField(
+                  hintText: "JIDs (comma separated) e.g. user1@host,user2@host",
+                  textEditController: _createRostersListController,
+                ),
+                SizedBox(height: 5),
+                customTextField(
+                  hintText: "Names (comma separated) e.g. User1,User2",
+                  textEditController: _createRostersNameController,
+                ),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (_createRostersListController.text.isNotEmpty &&
+                        _createRostersNameController.text.isNotEmpty) {
+                      List<String> jids = _createRostersListController.text
+                          .split(',')
+                          .map((e) => e.trim())
+                          .toList();
+                      List<String> names = _createRostersNameController.text
+                          .split(',')
+                          .map((e) => e.trim())
+                          .toList();
+                      
+                      if (jids.length == names.length) {
+                        List<Map<String, String>> rosters = [];
+                        for (int i = 0; i < jids.length; i++) {
+                          rosters.add({
+                            "user_jid": jids[i],
+                            "name": names[i],
+                          });
+                        }
+                        await flutterXmpp.createRosters(rosters);
+                        if (_scaffoldKey.currentContext != null) {
+                          ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
+                            SnackBar(
+                              content: Text('${rosters.length} rosters created'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      } else {
+                        if (_scaffoldKey.currentContext != null) {
+                          ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
+                            SnackBar(
+                              content: Text('Number of JIDs and Names must match'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      }
+                    }
+                  },
+                  child: Text("Create Multiple Rosters"),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue),
+                ),
+                SizedBox(
+                  height: 15,
+                ),
+                Text(
+                  "Delete Roster:",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 5),
+                customTextField(
+                  hintText: "User JID to delete",
+                  textEditController: _deleteRosterController,
+                ),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (_deleteRosterController.text.isNotEmpty) {
+                      await flutterXmpp.deleteRoster(_deleteRosterController.text);
+                      if (_scaffoldKey.currentContext != null) {
+                        ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
+                          SnackBar(
+                            content: Text('Roster deleted: ${_deleteRosterController.text}'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  child: Text("Delete Roster"),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red),
+                ),
+                SizedBox(
+                  height: 15,
+                ),
+                Text(
+                  "Get Presence Status:",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 5),
+                customTextField(
+                  hintText: "User JID for presence status",
+                  textEditController: _presenceStatusController,
+                ),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (_presenceStatusController.text.isNotEmpty) {
+                      Map<String, String>? presenceStatus = 
+                          await flutterXmpp.getPresenceStatus(_presenceStatusController.text);
+                      if (_scaffoldKey.currentContext != null) {
+                        if (presenceStatus != null) {
+                          ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Presence: Type=${presenceStatus['presenceType']}, '
+                                'Mode=${presenceStatus['presenceMode']}',
+                              ),
+                              duration: Duration(seconds: 3),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
+                            SnackBar(
+                              content: Text('Presence status not available'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      }
+                    }
+                  },
+                  child: Text("Get Presence Status"),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green),
+                ),
+                SizedBox(
+                  height: 15,
+                ),
+                Text(
+                  "Subscription Requests:",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 5),
+                customTextField(
+                  hintText: "User JID to send subscription request",
+                  textEditController: _sendSubscriptionController,
+                ),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (_sendSubscriptionController.text.isNotEmpty) {
+                      await flutterXmpp.sendSubscriptionRequest(_sendSubscriptionController.text);
+                      if (_scaffoldKey.currentContext != null) {
+                        ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
+                          SnackBar(
+                            content: Text('Subscription request sent to: ${_sendSubscriptionController.text}'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  child: Text("Send Subscription Request"),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange),
+                ),
+                SizedBox(
+                  height: 15,
+                ),
+                customTextField(
+                  hintText: "User JID to accept subscription request",
+                  textEditController: _acceptSubscriptionController,
+                ),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (_acceptSubscriptionController.text.isNotEmpty) {
+                      await flutterXmpp.acceptSubscriptionRequest(_acceptSubscriptionController.text);
+                      if (_scaffoldKey.currentContext != null) {
+                        ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
+                          SnackBar(
+                            content: Text('Subscription request accepted from: ${_acceptSubscriptionController.text}'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  child: Text("Accept Subscription Request"),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal),
+                ),
+                SizedBox(
+                  height: 15,
+                ),
+                customTextField(
+                  hintText: "User JID to reject subscription request",
+                  textEditController: _rejectSubscriptionController,
+                ),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (_rejectSubscriptionController.text.isNotEmpty) {
+                      await flutterXmpp.rejectSubscriptionRequest(_rejectSubscriptionController.text);
+                      if (_scaffoldKey.currentContext != null) {
+                        ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
+                          SnackBar(
+                            content: Text('Subscription request rejected from: ${_rejectSubscriptionController.text}'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  child: Text("Reject Subscription Request"),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepOrange),
+                ),
+                SizedBox(
+                  height: 15,
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    await flutterXmpp.currentState();
+                  },
+                  child: Text("Current State"),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black),
                 ),
                 SizedBox(
                   height: 15,
@@ -880,8 +1132,8 @@ class _MyAppState extends State<MyApp>
     try {
       XmppConnectionState connectionStatus =
           await flutterXmpp.getConnectionStatus();
-      if (_scaffoldKey.currentState != null) {
-        ScaffoldMessenger.of(context).showSnackBar(new SnackBar(
+      if (_scaffoldKey.currentContext != null) {
+        ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(new SnackBar(
           content: new Text('${connectionStatus.toString()}'),
           duration: Duration(milliseconds: 700),
         ));

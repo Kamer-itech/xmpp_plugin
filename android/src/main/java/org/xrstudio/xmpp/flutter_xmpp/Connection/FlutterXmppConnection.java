@@ -289,12 +289,10 @@ public class FlutterXmppConnection implements ConnectionListener {
                 return userLastActivity;
             }
             
-            // Si le JID contient déjà un @, l'utiliser tel quel (il a déjà un domaine)
             String finalJid;
             if (userJid.contains(Constants.SYMBOL_COMPARE_JID)) {
                 finalJid = userJid;
             } else {
-                // Sinon, ajouter le domaine
                 finalJid = Utils.getJidWithDomainName(userJid, mHost);
             }
             
@@ -416,6 +414,87 @@ public class FlutterXmppConnection implements ConnectionListener {
         } catch (Exception e) {
             e.printStackTrace();
             return null; 
+        }
+    }
+
+    public static void sendSubscriptionRequest(String userJid) {
+        try {
+            if (userJid == null || userJid.isEmpty()) {
+                Utils.printLog("sendSubscriptionRequest: userJid is null or empty");
+                return;
+            }
+
+            String finalJid;
+            if (userJid.contains(Constants.SYMBOL_COMPARE_JID)) {
+                finalJid = userJid;
+            } else {
+                finalJid = Utils.getJidWithDomainName(userJid, mHost);
+            }
+
+            EntityBareJid jid = JidCreate.entityBareFrom(finalJid);
+            Presence subscribePresence = new Presence(Presence.Type.subscribe);
+            subscribePresence.setTo(jid);
+
+            mConnection.sendStanza(subscribePresence);
+            Utils.addLogInStorage("Action: sentSubscriptionRequest, To: " + finalJid);
+            Utils.printLog("Sent subscription request to: " + finalJid);
+        } catch (Exception e) {
+            Utils.printLog("sendSubscriptionRequest: Error for JID " + userJid + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public static void acceptSubscriptionRequest(String userJid) {
+        try {
+            if (userJid == null || userJid.isEmpty()) {
+                Utils.printLog("acceptSubscriptionRequest: userJid is null or empty");
+                return;
+            }
+
+            String finalJid;
+            if (userJid.contains(Constants.SYMBOL_COMPARE_JID)) {
+                finalJid = userJid;
+            } else {
+                finalJid = Utils.getJidWithDomainName(userJid, mHost);
+            }
+
+            EntityBareJid jid = JidCreate.entityBareFrom(finalJid);
+            Presence subscribedPresence = new Presence(Presence.Type.subscribed);
+            subscribedPresence.setTo(jid);
+
+            mConnection.sendStanza(subscribedPresence);
+            Utils.addLogInStorage("Action: acceptedSubscriptionRequest, From: " + finalJid);
+            Utils.printLog("Accepted subscription request from: " + finalJid);
+        } catch (Exception e) {
+            Utils.printLog("acceptSubscriptionRequest: Error for JID " + userJid + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public static void rejectSubscriptionRequest(String userJid) {
+        try {
+            if (userJid == null || userJid.isEmpty()) {
+                Utils.printLog("rejectSubscriptionRequest: userJid is null or empty");
+                return;
+            }
+
+            String finalJid;
+            if (userJid.contains(Constants.SYMBOL_COMPARE_JID)) {
+                finalJid = userJid;
+            } else {
+                finalJid = Utils.getJidWithDomainName(userJid, mHost);
+            }
+
+            EntityBareJid jid = JidCreate.entityBareFrom(finalJid);
+            Presence unsubscribedPresence = new Presence(Presence.Type.unsubscribed);
+            unsubscribedPresence.setTo(jid);
+
+            mConnection.sendStanza(unsubscribedPresence);
+            Utils.addLogInStorage("Action: rejectedSubscriptionRequest, From: " + finalJid);
+            Utils.printLog("Rejected subscription request from: " + finalJid);
+        } catch (Exception e) {
+            Utils.printLog("rejectSubscriptionRequest: Error for JID " + userJid + ": " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

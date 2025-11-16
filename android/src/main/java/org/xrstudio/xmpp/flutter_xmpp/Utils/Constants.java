@@ -32,6 +32,9 @@ public class Constants {
     public static final String REMOVE_ROSTER = "remove_roster";
     public static final String GET_MY_ROSTERS = "get_my_rosters";
     public static final String GET_PRESENCE_STATUS = "get_presence_status";
+    public static final String ACCEPT_SUBSCRIPTION_REQUEST = "accept_subscription_request";
+    public static final String REJECT_SUBSCRIPTION_REQUEST = "reject_subscription_request";
+    public static final String SEND_SUBSCRIPTION_REQUEST = "send_subscription_request";
     public static final String CUSTOM_MESSAGE = "send_custom_message";
     public static final String ADD_ADMINS_IN_GROUP = "add_admins_in_group";
     public static final String SEND_DELIVERY_ACK = "send_delivery_receipt";

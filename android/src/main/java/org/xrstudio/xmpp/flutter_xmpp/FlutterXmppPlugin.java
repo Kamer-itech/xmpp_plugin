@@ -804,6 +804,39 @@ public class FlutterXmppPlugin implements MethodCallHandler, FlutterPlugin, Acti
                 result.success(presenceStatus);
                 break;
 
+            case Constants.SEND_SUBSCRIPTION_REQUEST:
+
+                userJid = call.argument(Constants.USER_JID);
+                if (userJid == null || userJid.isEmpty()) {
+                    result.error("MISSING", "Missing argument user_jid.", null);
+                    break;
+                }
+                FlutterXmppConnection.sendSubscriptionRequest(userJid);
+                result.success(Constants.SUCCESS);
+                break;
+
+            case Constants.ACCEPT_SUBSCRIPTION_REQUEST:
+
+                userJid = call.argument(Constants.USER_JID);
+                if (userJid == null || userJid.isEmpty()) {
+                    result.error("MISSING", "Missing argument user_jid.", null);
+                    break;
+                }
+                FlutterXmppConnection.acceptSubscriptionRequest(userJid);
+                result.success(Constants.SUCCESS);
+                break;
+
+            case Constants.REJECT_SUBSCRIPTION_REQUEST:
+
+                userJid = call.argument(Constants.USER_JID);
+                if (userJid == null || userJid.isEmpty()) {
+                    result.error("MISSING", "Missing argument user_jid.", null);
+                    break;
+                }
+                FlutterXmppConnection.rejectSubscriptionRequest(userJid);
+                result.success(Constants.SUCCESS);
+                break;
+
             default:
                 result.notImplemented();
                 break;
