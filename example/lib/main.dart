@@ -258,6 +258,7 @@ class _MyAppState extends State<MyApp>
   TextEditingController _sendSubscriptionController = TextEditingController();
   TextEditingController _acceptSubscriptionController = TextEditingController();
   TextEditingController _rejectSubscriptionController = TextEditingController();
+  TextEditingController _presenceProbeController = TextEditingController();
   TextEditingController _joinMUCTextController = TextEditingController();
   TextEditingController _joinTimeController = TextEditingController();
   TextEditingController _messageController = TextEditingController();
@@ -1025,6 +1026,37 @@ class _MyAppState extends State<MyApp>
                   child: Text("Reject Subscription Request"),
                   style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepOrange),
+                ),
+                SizedBox(
+                  height: 15,
+                ),
+                Text(
+                  "Request Presence Probe:",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 5),
+                customTextField(
+                  hintText: "User JID to probe presence",
+                  textEditController: _presenceProbeController,
+                ),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (_presenceProbeController.text.isNotEmpty) {
+                      await flutterXmpp.requestPresenceProbe(_presenceProbeController.text);
+                      if (_scaffoldKey.currentContext != null) {
+                        ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
+                          SnackBar(
+                            content: Text('Presence probe sent to: ${_presenceProbeController.text}. Check onPresenceChange for response.'),
+                            duration: Duration(seconds: 3),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  child: Text("Request Presence Probe"),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple),
                 ),
                 SizedBox(
                   height: 15,

@@ -41,6 +41,26 @@ extension XMPPController {
         printLog("\(#function) | XMPPPresence | presence: \(presence) | error: \(error)")
     }
     
+    func requestPresenceProbe(withUserJid jid: String, withStrem: XMPPStream) {
+        printLog("\(#function) | withUserJid: \(jid)")
+        if jid.trim().isEmpty {
+            print("\(#function) | getting userJid is empty.")
+            return
+        }
+        
+        guard let vJid = XMPPJID(string: getJIDNameForUser(jid.trim(), withStrem: withStrem)) else {
+            print("\(#function) | Getting Invalid Jid | userJid : \(jid)")
+            return
+        }
+        
+        // Create a presence probe (type="probe")
+        let probePresence = XMPPPresence(type: "probe")
+        probePresence.addAttribute(withName: "to", stringValue: vJid.full)
+        withStrem.send(probePresence)
+        
+        printLog("\(#function) | Sent presence probe to: \(vJid)")
+    }
+    
     func xmppStream(_ sender: XMPPStream, didReceive presence: XMPPPresence) {
         printLog("\(#function) | XMPPPresence | presence: \(presence)")
         

@@ -324,12 +324,23 @@ class XmppConnection {
   Future<Map<String, String>?> getPresenceStatus(String userJid) async {
     final params = {"user_jid": userJid};
     printLogForMethodCall('get_presence_status', params);
-    final dynamic presenceStatus = await _channel.invokeMethod('get_presence_status', params);
-    if (presenceStatus != null && presenceStatus is Map) {
-      return Map<String, String>.from(presenceStatus);
+    try {
+      final dynamic presenceStatus = await _channel.invokeMethod('get_presence_status', params);
+      print('getPresenceStatus: received response: $presenceStatus');
+      if (presenceStatus != null && presenceStatus is Map) {
+        Map<String, String> result = {};
+        presenceStatus.forEach((key, value) {
+          result[key] = value?.toString() ?? '';
+        });
+        print('checkNewFeat getPresenceStatus: Mode: ${result['presenceMode']}, Type: ${result['presenceType']}');
+        return result;
+      }
+      print('checkNewFeat getPresenceStatus: User not found in roster or presence not available');
+      return null;
+    } catch (e) {
+      print('checkNewFeat getPresenceStatus: Error - $e');
+      return null;
     }
-    print('checkNewFeat getPresenceStatus: User not found in roster or presence not available');
-    return null;
   }
 
   Future<void> sendSubscriptionRequest(String userJid) async {
@@ -351,6 +362,13 @@ class XmppConnection {
     printLogForMethodCall('reject_subscription_request', params);
     await _channel.invokeMethod('reject_subscription_request', params);
     print('checkNewFeat reject subscription request success');
+  }
+
+  Future<void> requestPresenceProbe(String userJid) async {
+    final params = {"user_jid": userJid};
+    printLogForMethodCall('request_presence_probe', params);
+    await _channel.invokeMethod('request_presence_probe', params);
+    print('checkNewFeat request presence probe success');
   }
 
   Future<List<dynamic>> getMembers(String groupName) async {

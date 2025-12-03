@@ -324,6 +324,9 @@ public class FlutterXmppConnection implements ConnectionListener {
                 rosterMap.put("jid", jid);
                 rosterMap.put("name", rosterEntry.getName() != null ? rosterEntry.getName() : "");
                 
+                Object subscriptionType = rosterEntry.getType();
+                rosterMap.put("subscription", subscriptionType != null ? subscriptionType.toString().toLowerCase() : "none");
+                
                 try {
                     Presence presence = rosterConnection.getPresence(bareJid);
                     if (presence != null) {
@@ -391,29 +394,55 @@ public class FlutterXmppConnection implements ConnectionListener {
         }
     }
 
-    public static Map<String, String> getPresenceStatus(String userJid) {
+    public static Map<String, Object> getPresenceStatus(String userJid) {
         try {
-            EntityBareJid jid = JidCreate.entityBareFrom(Utils.getJidWithDomainName(userJid, mHost));
+            if (rosterConnection == null) {
+                Utils.printLog("getPresenceStatus: rosterConnection is null");
+                return null;
+            }
+
+            String finalJid;
+            if (userJid.contains(Constants.SYMBOL_COMPARE_JID)) {
+                finalJid = userJid;
+            } else {
+                finalJid = Utils.getJidWithDomainName(userJid, mHost);
+            }
+
+            Utils.printLog("getPresenceStatus: finalJid = " + finalJid);
+
+            EntityBareJid jid = JidCreate.entityBareFrom(finalJid);
             
             RosterEntry rosterEntry = rosterConnection.getEntry(jid);
             if (rosterEntry == null) {
-                return null; 
+                Utils.printLog("getPresenceStatus: rosterEntry is null for " + finalJid);
+                return null;
             }
-            
+
             Presence presence = rosterConnection.getPresence(jid);
+
+            Map<String, Object> presenceStatus = new HashMap<>();
+
             if (presence == null) {
-                return null; 
+                Utils.printLog("getPresenceStatus: presence is null for " + finalJid + ", returning unavailable");
+                presenceStatus.put("presenceType", "unavailable");
+                presenceStatus.put("presenceMode", null);
+            } else {
+                String presenceType = presence.getType().toString().toLowerCase();
+                Presence.Mode mode = presence.getMode();
+                String presenceMode = mode != null ? mode.toString().toLowerCase() : null;
+                
+                presenceStatus.put("presenceType", presenceType);
+                presenceStatus.put("presenceMode", presenceMode);
+                
+                Utils.printLog("getPresenceStatus: presence found - type: " + presenceType + ", mode: " + presenceMode);
             }
             
-            Map<String, String> presenceStatus = new HashMap<>();
-            presenceStatus.put("presenceType", presence.getType().toString().toLowerCase());
-            Presence.Mode mode = presence.getMode();
-            presenceStatus.put("presenceMode", mode != null ? mode.toString().toLowerCase() : null);
-            
+            Utils.printLog("getPresenceStatus: returning map: " + presenceStatus.toString());
             return presenceStatus;
         } catch (Exception e) {
+            Utils.printLog("getPresenceStatus: Error for " + userJid + ": " + e.getMessage());
             e.printStackTrace();
-            return null; 
+            return null;
         }
     }
 
@@ -421,6 +450,11 @@ public class FlutterXmppConnection implements ConnectionListener {
         try {
             if (userJid == null || userJid.isEmpty()) {
                 Utils.printLog("sendSubscriptionRequest: userJid is null or empty");
+                return;
+            }
+
+            if (rosterConnection == null) {
+                Utils.printLog("sendSubscriptionRequest: rosterConnection is null");
                 return;
             }
 
@@ -432,10 +466,9 @@ public class FlutterXmppConnection implements ConnectionListener {
             }
 
             EntityBareJid jid = JidCreate.entityBareFrom(finalJid);
-            Presence subscribePresence = new Presence(Presence.Type.subscribe);
-            subscribePresence.setTo(jid);
-
-            mConnection.sendStanza(subscribePresence);
+            
+            rosterConnection.sendSubscriptionRequest(jid);
+            
             Utils.addLogInStorage("Action: sentSubscriptionRequest, To: " + finalJid);
             Utils.printLog("Sent subscription request to: " + finalJid);
         } catch (Exception e) {
@@ -451,6 +484,11 @@ public class FlutterXmppConnection implements ConnectionListener {
                 return;
             }
 
+            if (rosterConnection == null) {
+                Utils.printLog("acceptSubscriptionRequest: rosterConnection is null");
+                return;
+            }
+
             String finalJid;
             if (userJid.contains(Constants.SYMBOL_COMPARE_JID)) {
                 finalJid = userJid;
@@ -459,10 +497,12 @@ public class FlutterXmppConnection implements ConnectionListener {
             }
 
             EntityBareJid jid = JidCreate.entityBareFrom(finalJid);
+            
             Presence subscribedPresence = new Presence(Presence.Type.subscribed);
             subscribedPresence.setTo(jid);
-
+            
             mConnection.sendStanza(subscribedPresence);
+            
             Utils.addLogInStorage("Action: acceptedSubscriptionRequest, From: " + finalJid);
             Utils.printLog("Accepted subscription request from: " + finalJid);
         } catch (Exception e) {
@@ -478,6 +518,11 @@ public class FlutterXmppConnection implements ConnectionListener {
                 return;
             }
 
+            if (rosterConnection == null) {
+                Utils.printLog("rejectSubscriptionRequest: rosterConnection is null");
+                return;
+            }
+
             String finalJid;
             if (userJid.contains(Constants.SYMBOL_COMPARE_JID)) {
                 finalJid = userJid;
@@ -486,14 +531,51 @@ public class FlutterXmppConnection implements ConnectionListener {
             }
 
             EntityBareJid jid = JidCreate.entityBareFrom(finalJid);
+            
             Presence unsubscribedPresence = new Presence(Presence.Type.unsubscribed);
             unsubscribedPresence.setTo(jid);
-
+            
             mConnection.sendStanza(unsubscribedPresence);
+            
             Utils.addLogInStorage("Action: rejectedSubscriptionRequest, From: " + finalJid);
             Utils.printLog("Rejected subscription request from: " + finalJid);
         } catch (Exception e) {
             Utils.printLog("rejectSubscriptionRequest: Error for JID " + userJid + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public static void requestPresenceProbe(String userJid) {
+        try {
+            if (userJid == null || userJid.isEmpty()) {
+                Utils.printLog("requestPresenceProbe: userJid is null or empty");
+                return;
+            }
+
+            if (mConnection == null || !mConnection.isConnected()) {
+                Utils.printLog("requestPresenceProbe: connection is null or not connected");
+                return;
+            }
+
+            String finalJid;
+            if (userJid.contains(Constants.SYMBOL_COMPARE_JID)) {
+                finalJid = userJid;
+            } else {
+                finalJid = Utils.getJidWithDomainName(userJid, mHost);
+            }
+
+            EntityBareJid jid = JidCreate.entityBareFrom(finalJid);
+            
+            // Create a presence probe (type="probe")
+            Presence probePresence = new Presence(Presence.Type.probe);
+            probePresence.setTo(jid);
+            
+            mConnection.sendStanza(probePresence);
+            
+            Utils.addLogInStorage("Action: requestPresenceProbe, To: " + finalJid);
+            Utils.printLog("Sent presence probe to: " + finalJid);
+        } catch (Exception e) {
+            Utils.printLog("requestPresenceProbe: Error for JID " + userJid + ": " + e.getMessage());
             e.printStackTrace();
         }
     }

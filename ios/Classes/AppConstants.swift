@@ -53,6 +53,7 @@ struct pluginMethod {
     static let changeTypingStatus : String          = "change_typing_status"
     static let changePresenceType : String          = "change_presence_type"
     static let getConnectionStatus : String         = "get_connection_status"
+    static let requestPresenceProbe : String        = "request_presence_probe"
 }
 
 struct pluginMessType {

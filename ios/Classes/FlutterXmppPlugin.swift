@@ -130,6 +130,9 @@ public class FlutterXmppPlugin: NSObject, FlutterPlugin {
         case pluginMethod.getConnectionStatus :
             self.getConnectionStatus(call, result)
             
+        case pluginMethod.requestPresenceProbe:
+            self.requestPresenceProbeActivity(call, result)
+            
         default:
             guard let vData = call.arguments as? [String : Any] else {
                 print("Getting invalid/nil arguments-data by pluging.... | \(vMethod) | arguments: \(String(describing: call.arguments))")
@@ -604,6 +607,24 @@ public class FlutterXmppPlugin: NSObject, FlutterPlugin {
         printLog("\(#function) connection status \(valueStatus) ")
         result(valueStatus)
         
+    }
+    
+    func requestPresenceProbeActivity(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
+        guard let vData = call.arguments as? [String : Any] else {
+            result(xmppConstants.DataNil);
+            return
+        }
+        let vMethod : String = call.method.trim()
+        printLog("\(#function) | \(vMethod) | arguments: \(String(describing: vData))")
+        
+        var vUserId : String = (vData["user_jid"] as? String ?? "").trim()
+        if vUserId.isEmpty {
+            result(xmppConstants.DataNil)
+            return
+        }
+        
+        APP_DELEGATE.objXMPP.requestPresenceProbe(withUserJid: vUserId, withStrem: self.objXMPP.xmppStream)
+        result(xmppConstants.SUCCESS)
     }
     
     //MARK: - perform XMPP Connection

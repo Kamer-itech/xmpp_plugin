@@ -796,12 +796,19 @@ public class FlutterXmppPlugin implements MethodCallHandler, FlutterPlugin, Acti
                     result.error("MISSING", "Missing argument user_jid.", null);
                     break;
                 }
-                Map<String, String> presenceStatus = FlutterXmppConnection.getPresenceStatus(userJid);
+                Map<String, Object> presenceStatus = FlutterXmppConnection.getPresenceStatus(userJid);
                 if (presenceStatus == null) {
                     result.error("NOT_FOUND", "User not found in roster or presence not available.", null);
                     break;
                 }
-                result.success(presenceStatus);
+                Utils.printLog("GET_PRESENCE_STATUS: presenceStatus found, sending to Flutter: " + presenceStatus.toString());
+                try {
+                    result.success(presenceStatus);
+                } catch (Exception e) {
+                    Utils.printLog("GET_PRESENCE_STATUS: Error sending result: " + e.getMessage());
+                    e.printStackTrace();
+                    result.error("SERIALIZATION_ERROR", "Error serializing presence status: " + e.getMessage(), null);
+                }
                 break;
 
             case Constants.SEND_SUBSCRIPTION_REQUEST:
@@ -834,6 +841,17 @@ public class FlutterXmppPlugin implements MethodCallHandler, FlutterPlugin, Acti
                     break;
                 }
                 FlutterXmppConnection.rejectSubscriptionRequest(userJid);
+                result.success(Constants.SUCCESS);
+                break;
+
+            case Constants.REQUEST_PRESENCE_PROBE:
+
+                userJid = call.argument(Constants.USER_JID);
+                if (userJid == null || userJid.isEmpty()) {
+                    result.error("MISSING", "Missing argument user_jid.", null);
+                    break;
+                }
+                FlutterXmppConnection.requestPresenceProbe(userJid);
                 result.success(Constants.SUCCESS);
                 break;
 
