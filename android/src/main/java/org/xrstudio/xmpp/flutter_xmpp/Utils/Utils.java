@@ -187,13 +187,7 @@ public class Utils {
             }
         }
 
-        if (message.hasExtension(DeliveryReceipt.ELEMENT, DeliveryReceipt.NAMESPACE)) {
-            DeliveryReceipt dr = DeliveryReceipt.from((Message) message);
-            msgId = dr.getId();
-            META_TEXT = Constants.DELIVERY_ACK;
-        }
 
-        // Check for read receipt (XEP-0333 Chat Markers - displayed element)
         ExtensionElement displayedElement = message.getExtension("displayed", "urn:xmpp:chat-markers:0");
         if (displayedElement != null) {
             // The id is an attribute of the displayed element
@@ -211,6 +205,11 @@ public class Utils {
                     }
                 }
             }
+        } else if (message.hasExtension(DeliveryReceipt.ELEMENT, DeliveryReceipt.NAMESPACE)) {
+            // Only check for delivery receipt if it's not a read receipt
+            DeliveryReceipt dr = DeliveryReceipt.from((Message) message);
+            msgId = dr.getId();
+            META_TEXT = Constants.DELIVERY_ACK;
         }
 
         ChatState chatState = null;
