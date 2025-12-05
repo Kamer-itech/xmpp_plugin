@@ -237,6 +237,11 @@ class XmppConnection {
     await _channel.invokeMethod('send_delivery_receipt', params);
   }
 
+  Future<void> sendReadReceipt(String toJid, String msgId, String receiptID) async {
+    final params = {"toJid": toJid, "msgId": msgId, "receiptId": receiptID};
+    await _channel.invokeMethod('send_read_receipt', params);
+  }
+
   Future<void> addMembersInGroup(String groupName, List<String> members) async {
     final params = {"group_name": groupName, "members_jid": members};
     await _channel.invokeMethod('add_members_in_group', params);

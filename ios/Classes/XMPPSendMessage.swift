@@ -72,6 +72,34 @@ extension XMPPController {
         
         addLogger(.sentDeliveryReceiptToServer, xmppMessage)
     }
+    
+    func sentMessageReadReceipt(withReceiptId receiptId: String, jid : String, messageId : String, withStrem : XMPPStream) {
+        if receiptId.trim().isEmpty {
+            print("\(#function) | ReceiptId is empty/nil.")
+            return
+        }
+        if jid.trim().isEmpty {
+            print("\(#function) | jid is empty/nil.")
+            return
+        }
+        if messageId.trim().isEmpty {
+            print("\(#function) | MessageId is empty/nil.")
+            return
+        }
+        
+        let vJid : XMPPJID? = XMPPJID(string: getJIDNameForUser(jid, withStrem: withStrem))
+        let xmppMessage = XMPPMessage.init(type: xmppChatType.NORMAL, to: vJid)
+        xmppMessage.addAttribute(withName: "id", stringValue: receiptId)
+        
+        // Using XEP-0333 Chat Markers for read receipts (displayed element)
+        let eleDisplayed: XMLElement = XMLElement.init(name: "displayed", xmlns: "urn:xmpp:chat-markers:0")
+        eleDisplayed.addAttribute(withName: "id", stringValue: messageId)
+        xmppMessage.addChild(eleDisplayed)
+        
+        withStrem.send(xmppMessage)
+        
+        addLogger(.sentDeliveryReceiptToServer, xmppMessage)
+    }
 
     //MARK: - Send Ack
     func sendAck(_ withMessageId : String) {

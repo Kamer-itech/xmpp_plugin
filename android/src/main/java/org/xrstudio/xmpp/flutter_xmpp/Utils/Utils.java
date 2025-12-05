@@ -193,6 +193,26 @@ public class Utils {
             META_TEXT = Constants.DELIVERY_ACK;
         }
 
+        // Check for read receipt (XEP-0333 Chat Markers - displayed element)
+        ExtensionElement displayedElement = message.getExtension("displayed", "urn:xmpp:chat-markers:0");
+        if (displayedElement != null) {
+            // The id is an attribute of the displayed element
+            String displayedXml = displayedElement.toXML().toString();
+            // Parse the id attribute from XML
+            int idStart = displayedXml.indexOf("id=\"");
+            if (idStart != -1) {
+                idStart += 4; // Skip "id=\""
+                int idEnd = displayedXml.indexOf("\"", idStart);
+                if (idEnd != -1) {
+                    String displayedId = displayedXml.substring(idStart, idEnd);
+                    if (!displayedId.isEmpty()) {
+                        msgId = displayedId;
+                        META_TEXT = Constants.READ_ACK;
+                    }
+                }
+            }
+        }
+
         ChatState chatState = null;
 
         if (message.hasExtension(ChatStateExtension.NAMESPACE)) {

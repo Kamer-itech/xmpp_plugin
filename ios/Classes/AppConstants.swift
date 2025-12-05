@@ -36,6 +36,7 @@ struct pluginMethod {
     static let joinMUCGroups : String               = "join_muc_groups"
     static let joinMUCGroup : String                = "join_muc_group"
     static let sendReceiptDelivery : String         = "send_delivery_receipt"
+    static let sendReadReceipt : String             = "send_read_receipt"
     static let addMembersInGroup : String           = "add_members_in_group"
     static let addAdminsInGroup : String            = "add_admins_in_group"
     static let addOwnersInGroup : String            = "add_owners_in_group"

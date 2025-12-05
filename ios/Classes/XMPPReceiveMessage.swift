@@ -50,6 +50,29 @@ extension XMPPController {
             self.senAckDeliveryReceipt(withMessageId: messId)
             return
         }
+        
+        // Check for read receipt (XEP-0333 Chat Markers - displayed element)
+        if let displayedElement = message.element(forName: "displayed", xmlns: "urn:xmpp:chat-markers:0") {
+            if let displayedId = displayedElement.attributeStringValue(forName: "id"), !displayedId.isEmpty {
+                var objMess : Message = Message.init()
+                objMess.initWithMessage(message: message)
+                let vFrom : String = message.fromStr ?? ""
+                
+                let dicData = ["type" : pluginMessType.ACK_READ,
+                             "id" : displayedId,
+                             "from" : vFrom,
+                             "body" : objMess.message,
+                             "customText" : "",
+                             "msgtype" : "normal",
+                             "senderJid": vFrom,
+                             "time" : ""] as [String : Any]
+                
+                APP_DELEGATE.objEventData!(dicData)
+                self.broadCastMessageToFlutter(dicData: dicData)
+                return
+            }
+        }
+        
         var chatStateType : String = ""
 
         if  message.hasChatState {

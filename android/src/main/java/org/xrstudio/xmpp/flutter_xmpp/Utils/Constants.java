@@ -39,6 +39,7 @@ public class Constants {
     public static final String CUSTOM_MESSAGE = "send_custom_message";
     public static final String ADD_ADMINS_IN_GROUP = "add_admins_in_group";
     public static final String SEND_DELIVERY_ACK = "send_delivery_receipt";
+    public static final String SEND_READ_ACK = "send_read_receipt";
     public static final String ADD_OWNERS_IN_GROUP = "add_owners_in_group";
     public static final String ADD_MEMBERS_IN_GROUP = "add_members_in_group";
     public static final String CUSTOM_GROUP_MESSAGE = "send_customgroup_message";

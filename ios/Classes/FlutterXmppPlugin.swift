@@ -79,6 +79,9 @@ public class FlutterXmppPlugin: NSObject, FlutterPlugin {
         case pluginMethod.sendReceiptDelivery:
             self.performReceiptDeliveryActivity(call, result)
             
+        case pluginMethod.sendReadReceipt:
+            self.performReadReceiptActivity(call, result)
+            
         case pluginMethod.addMembersInGroup:
             self.performAddRemoveMembersInGroupActivity(withMemeberType: .Member, actionType: .Add, call, result)
             
@@ -378,6 +381,24 @@ public class FlutterXmppPlugin: NSObject, FlutterPlugin {
                                                 jid: toJid,
                                                 messageId: msgId,
                                                 withStrem: self.objXMPP.xmppStream)
+        result(xmppConstants.SUCCESS)
+    }
+    
+    func performReadReceiptActivity(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
+        guard let vData = call.arguments as? [String : Any] else {
+            result(xmppConstants.ERROR)
+            return
+        }
+        let vMethod : String = call.method.trim()
+        let toJid : String = (vData["toJid"] as? String ?? "").trim()
+        let msgId : String = vData["msgId"] as? String ?? ""
+        let receiptId : String = (vData["receiptId"] as? String ?? "").trim()
+        printLog("\(#function) | \(vMethod) | arguments: \(vData) | toJid: \(toJid) | msgId : \(msgId) | receiptId: \(receiptId)")
+        
+        self.objXMPP.sentMessageReadReceipt(withReceiptId: receiptId,
+                                           jid: toJid,
+                                           messageId: msgId,
+                                           withStrem: self.objXMPP.xmppStream)
         result(xmppConstants.SUCCESS)
     }
     

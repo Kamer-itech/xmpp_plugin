@@ -597,6 +597,17 @@ public class FlutterXmppPlugin implements MethodCallHandler, FlutterPlugin, Acti
                 result.success(Constants.SUCCESS);
                 break;
 
+            case Constants.SEND_READ_ACK:
+
+                String readToJid = call.argument(Constants.TO_JID_1);
+                String readMsgId = call.argument(Constants.MESSAGE_ID);
+                String readReceiptId = call.argument(Constants.RECEIPT_ID);
+
+                FlutterXmppConnection.send_read_receipt(readToJid, readMsgId, readReceiptId);
+
+                result.success(Constants.SUCCESS);
+                break;
+
             case Constants.ADD_MEMBERS_IN_GROUP:
 
                 groupName = call.argument(Constants.GROUP_NAME);

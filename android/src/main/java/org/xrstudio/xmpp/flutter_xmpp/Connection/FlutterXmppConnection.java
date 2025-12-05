@@ -181,6 +181,33 @@ public class FlutterXmppConnection implements ConnectionListener {
         }
     }
 
+    public static void send_read_receipt(String toJid, String msgId, String receiptId) {
+
+        try {
+
+            if (!toJid.contains(mHost)) {
+                toJid = toJid + Constants.SYMBOL_COMPARE_JID + mHost;
+            }
+
+            Message readMessage = new Message();
+            readMessage.setStanzaId(receiptId);
+            readMessage.setTo(JidCreate.from(toJid));
+
+            // Using XEP-0333 Chat Markers for read receipts (displayed element)
+            StandardExtensionElement displayedElement = StandardExtensionElement.builder("displayed", "urn:xmpp:chat-markers:0")
+                    .addAttribute("id", msgId)
+                    .build();
+            readMessage.addExtension(displayedElement);
+
+            mConnection.sendStanza(readMessage);
+
+            Utils.addLogInStorage("Action: sentReadReceiptToServer, Content: " + readMessage.toXML().toString());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void manageAddMembersInGroup(GroupRole groupRole, String groupName, ArrayList<String> membersJid) {
 
         try {
