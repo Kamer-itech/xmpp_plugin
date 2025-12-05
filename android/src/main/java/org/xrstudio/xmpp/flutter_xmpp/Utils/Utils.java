@@ -87,7 +87,6 @@ public class Utils {
         }
         text = "Time: " + getTimeMillisecondFormat() + " " + text;
         boolean fileExists = true;
-//        checkDirectoryExist(logFilePath);
         try {
             File logFile = new File(logFilePath);
 
@@ -187,34 +186,51 @@ public class Utils {
             }
         }
 
-
-        ExtensionElement displayedElement = message.getExtension("displayed", "urn:xmpp:chat-markers:0");
-        if (displayedElement != null) {
-            // The id is an attribute of the displayed element
-            String displayedXml = displayedElement.toXML().toString();
-            // Parse the id attribute from XML
-            int idStart = displayedXml.indexOf("id=\"");
-            if (idStart != -1) {
-                idStart += 4; // Skip "id=\""
-                int idEnd = displayedXml.indexOf("\"", idStart);
-                if (idEnd != -1) {
-                    String displayedId = displayedXml.substring(idStart, idEnd);
-                    if (!displayedId.isEmpty()) {
-                        msgId = displayedId;
-                        META_TEXT = Constants.READ_ACK;
-                    }
-                }
-            }
-        } else if (message.hasExtension(DeliveryReceipt.ELEMENT, DeliveryReceipt.NAMESPACE)) {
-            // Only check for delivery receipt if it's not a read receipt
+        if (message.hasExtension(DeliveryReceipt.ELEMENT, DeliveryReceipt.NAMESPACE)) {
             DeliveryReceipt dr = DeliveryReceipt.from((Message) message);
             msgId = dr.getId();
             META_TEXT = Constants.DELIVERY_ACK;
         }
 
+        if (message.hasExtension("displayed", "urn:xmpp:chat-markers:0")) {
+            ExtensionElement displayedElement = message.getExtension("displayed", "urn:xmpp:chat-markers:0");
+            if (displayedElement != null) {
+                String displayedXml = displayedElement.toXML().toString();
+                
+                if (displayedElement instanceof StandardExtensionElement) {
+                    StandardExtensionElement stdDisplayedElement = (StandardExtensionElement) displayedElement;
+                    String displayedId = stdDisplayedElement.getAttributeValue("id");
+                    if (displayedId != null && !displayedId.isEmpty()) {
+                        msgId = displayedId;
+                        META_TEXT = Constants.READ_ACK;
+                    }
+                } else {
+                    int idStart = displayedXml.indexOf("id=\"");
+                    String quoteChar = "\"";
+                    if (idStart == -1) {
+                        idStart = displayedXml.indexOf("id='");
+                        quoteChar = "'";
+                    }
+                    if (idStart != -1) {
+                        idStart += 4;
+                        int idEnd = displayedXml.indexOf(quoteChar, idStart);
+                        if (idEnd != -1) {
+                            String displayedId = displayedXml.substring(idStart, idEnd);
+                            if (!displayedId.isEmpty()) {
+                                msgId = displayedId;
+                                META_TEXT = Constants.READ_ACK;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         ChatState chatState = null;
 
-        if (message.hasExtension(ChatStateExtension.NAMESPACE)) {
+        if (message.hasExtension(ChatStateExtension.NAMESPACE) && 
+            !META_TEXT.equals(Constants.DELIVERY_ACK) && 
+            !META_TEXT.equals(Constants.READ_ACK)) {
             META_TEXT = Constants.CHATSTATE;
             ChatStateExtension chatStateExtension = (ChatStateExtension) message.getExtension(ChatStateExtension.NAMESPACE);
             chatState = chatStateExtension.getChatState();
@@ -231,7 +247,6 @@ public class Utils {
         }
 
         if (!from.equals(FlutterXmppConnection.mUsername)) {
-            //Bundle up the intent and send the broadcast.
             Intent intent = new Intent(Constants.RECEIVE_MESSAGE);
             intent.setPackage(mApplicationContext.getPackageName());
             intent.putExtra(Constants.BUNDLE_FROM_JID, from);
@@ -282,7 +297,6 @@ public class Utils {
 
     public static void broadcastSuccessMessageToFlutter(Context mApplicationContext, SuccessState successState, String jid) {
 
-        //Bundle up the intent and send the broadcast.
         Intent intent = new Intent(Constants.SUCCESS_MESSAGE);
         intent.setPackage(mApplicationContext.getPackageName());
         intent.putExtra(Constants.BUNDLE_SUCCESS_TYPE, successState.toString());

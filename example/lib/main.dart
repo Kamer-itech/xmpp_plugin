@@ -140,8 +140,16 @@ class _MyAppState extends State<MyApp>
 
   @override
   void onNormalMessage(MessageChat messageChat) {
-    events.add(messageChat);
-    print('onNormalMessage: ${messageChat.toEventData()}');
+    if (messageChat.type == 'Read-Ack') {
+      print('✅ Read receipt reçu pour le message: ${messageChat.id} de ${messageChat.from}');
+      log('✅ Read receipt reçu: ${messageChat.toEventData()}');
+    } else if (messageChat.type == 'Delivery-Ack') {
+      print('📨 Delivery receipt reçu pour le message: ${messageChat.id} de ${messageChat.from}');
+      log('📨 Delivery receipt reçu: ${messageChat.toEventData()}');
+    } else {
+      events.add(messageChat);
+      print('onNormalMessage: ${messageChat.toEventData()}');
+    }
   }
 
   @override
@@ -707,17 +715,34 @@ class _MyAppState extends State<MyApp>
                 SizedBox(
                   height: 10,
                 ),
-                ElevatedButton(
-                  onPressed: () async {
-                    await flutterXmpp.sendDelieveryReceipt(
-                      "${_toReceiptController.text}",
-                      "${_msgIdController.text}",
-                      "${_receiptIdController.text}",
-                    );
-                  },
-                  child: Text(" Send Receipt "),
-                  style:
-                      ElevatedButton.styleFrom(backgroundColor: Colors.black),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () async {
+                        await flutterXmpp.sendDelieveryReceipt(
+                          "${_toReceiptController.text}",
+                          "${_msgIdController.text}",
+                          "${_receiptIdController.text}",
+                        );
+                      },
+                      child: Text(" Send Delivery Receipt "),
+                      style:
+                          ElevatedButton.styleFrom(backgroundColor: Colors.black),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        await flutterXmpp.sendReadReceipt(
+                          "${_toReceiptController.text}",
+                          "${_msgIdController.text}",
+                          "${_receiptIdController.text}",
+                        );
+                      },
+                      child: Text(" Send Read Receipt "),
+                      style:
+                          ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                    ),
+                  ],
                 ),
                 SizedBox(
                   height: 10,
